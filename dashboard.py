@@ -12,9 +12,6 @@ st.set_page_config(page_title="오산 조종석: 주식 분석 대시보드", la
 st.title("📊 종목별 PER vs 섹터 평균 비교 분석 (v1.1)") # <-- 버전을 표시하여 변경 확인
 st.write("S&P 500 종목의 주가 추이와 섹터 평균 대비 밸류에이션을 분석합니다.")
 
-st.title("📊 종목별 PER vs 섹터 평균 비교 분석")
-st.write("S&P 500 종목의 주가 추이와 섹터 평균 대비 밸류에이션을 분석합니다.")
-
 # 2. 구글 시트 연결 설정 (로컬/클라우드 환경 구분)
 @st.cache_resource
 def get_gspread_client():
