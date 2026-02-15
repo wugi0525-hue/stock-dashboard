@@ -1,21 +1,31 @@
 import streamlit as st
 import pandas as pd
 import gspread
+import json
+import os
 from oauth2client.service_account import ServiceAccountCredentials
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # 1. 페이지 설정 및 제목
 st.set_page_config(page_title="오산 조종석: 주식 분석 대시보드", layout="wide")
+st.title("📊 종목별 PER vs 섹터 평균 비교 분석 (v1.1)") # <-- 버전을 표시하여 변경 확인
+st.write("S&P 500 종목의 주가 추이와 섹터 평균 대비 밸류에이션을 분석합니다.")
+
 st.title("📊 종목별 PER vs 섹터 평균 비교 분석")
 st.write("S&P 500 종목의 주가 추이와 섹터 평균 대비 밸류에이션을 분석합니다.")
 
-# 2. 구글 시트 연결 설정
+# 2. 구글 시트 연결 설정 (로컬/클라우드 환경 구분)
 @st.cache_resource
 def get_gspread_client():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name('stock-key.json', scope)
-    return gspread.authorize(creds)
+    # Streamlit Cloud 환경인지 확인
+    if "google_key" in st.secrets and st.secrets["google_key"]:
+        credentials_info = json.loads(st.secrets["google_key"])
+        gc = gspread.service_account_from_dict(credentials_info)
+    # 로컬 환경
+    else:
+        gc = gspread.service_account(filename='stock-key.json')
+    return gc
 
 # 3. 데이터 불러오기 함수 (캐싱 적용)
 @st.cache_data
