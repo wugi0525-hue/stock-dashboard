@@ -5,15 +5,26 @@ import time
 import datetime
 import os
 import sys
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # 구글 시트 연결
 def get_gspread_client():
     try:
-        # 스크립트와 같은 경로에 있는 키 파일 사용
-        key_path = os.path.join(os.path.dirname(__file__), 'stock-key.json')
-        print(f"[Sync] 구글 시트 키로 연결 시도: {key_path}")
-        gc = gspread.service_account(filename=key_path)
-        return gc
+        gspread_key = os.environ.get('GSPREAD_KEY_JSON')
+        if gspread_key:
+            print("[Sync] 구글 시트 키(환경변수)로 연결 시도")
+            cred_dict = json.loads(gspread_key)
+            gc = gspread.service_account_from_dict(cred_dict)
+            return gc
+        else:
+            # 환경변수가 없을 경우 같은 경로에 있는 키 파일 사용 (로컬 테스트용)
+            key_path = os.path.join(os.path.dirname(__file__), 'stock-key.json')
+            print(f"[Sync] 구글 시트 키 파일로 연결 시도: {key_path}")
+            gc = gspread.service_account(filename=key_path)
+            return gc
     except Exception as e:
         print(f"[Error] 구글 시트 연결 실패: {e}")
         return None
@@ -22,9 +33,15 @@ def get_gspread_client():
 def get_firebase_client():
     try:
         if not firebase_admin._apps:
-            key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
-            print(f"[Sync] Firebase 키로 연결 시도: {key_path}")
-            cred = credentials.Certificate(key_path)
+            firebase_key = os.environ.get('FIREBASE_KEY_JSON')
+            if firebase_key:
+                print("[Sync] Firebase 키(환경변수)로 연결 시도")
+                cred_dict = json.loads(firebase_key)
+                cred = credentials.Certificate(cred_dict)
+            else:
+                key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
+                print(f"[Sync] Firebase 키 파일로 연결 시도: {key_path}")
+                cred = credentials.Certificate(key_path)
             firebase_admin.initialize_app(cred)
         return firestore.client()
     except Exception as e:
